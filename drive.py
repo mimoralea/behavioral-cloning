@@ -15,7 +15,7 @@ from scipy import misc
 
 from keras.models import model_from_json
 from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array
-
+from train import img_pre_processing
 
 sio = socketio.Server()
 app = Flask(__name__)
@@ -40,12 +40,17 @@ def telemetry(sid, data):
     imgString = data["image"]
     image = Image.open(BytesIO(base64.b64decode(imgString)))
     image_array = np.asarray(image)
-    img = misc.imresize(image_array, (50,100))
-    img_batch = img[None, :, :, :]
+
+    img = img_pre_processing(image_array)
+    img_batch = img[None, :, :, :].astype('float')
+
     # This model currently assumes that the features of the model are just the images. Feel free to change this.
     steering_angle = model.predict(img_batch, batch_size=1)
     # The driving model currently just outputs a constant throttle. Feel free to edit this.
-    send_control(steering_angle[0][0], 0.3)
+    send_control(steering_angle[0][0], 1.)
+    # steering is from -25 to 25
+    # control is from  -1 to 1
+    #send_control(-0.99, 0.3)
 
 
 @sio.on('connect')

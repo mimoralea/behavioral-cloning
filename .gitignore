@@ -1,4 +1,5 @@
 data/
+__pycache__/
 simulator/
 model.json
 model.h5

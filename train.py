@@ -2,11 +2,14 @@ import tensorflow as tf
 import pandas as pd
 import numpy as np
 
+from keras.optimizers import Adam
 from keras.models import Sequential, Model
-from keras.layers import Dropout, Activation
-from keras.layers import Input, Flatten, Dense
+from keras.layers import Dropout, Activation, Lambda
+from keras.layers import Input, Flatten, Dense, ELU
 from keras.layers import Convolution2D, MaxPooling2D
+from keras.layers.core import SpatialDropout2D
 from keras.wrappers.scikit_learn import KerasRegressor
+from keras.layers.normalization import BatchNormalization
 
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
@@ -14,47 +17,125 @@ from sklearn.model_selection import KFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 
-from scipy import misc
+import matplotlib.pyplot as plt
 
+from scipy import misc
+from skimage import color
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
 
 # command line flags
 flags.DEFINE_integer('epochs', 5, 'The number of epochs.')
-flags.DEFINE_integer('batch_size', 128, 'The batch size.')
+flags.DEFINE_integer('batch_size', 256, 'The batch size.')
+flags.DEFINE_integer('samples_per_epoch', 25600,
+                     'The number of samples per epoch.')
+flags.DEFINE_integer('val_size', 1000, 'The batch size.')
+flags.DEFINE_integer('img_h', 66, 'The image height.')
+flags.DEFINE_integer('img_w', 200, 'The image width.')
+flags.DEFINE_integer('img_c', 3, 'The number of channels.')
 
+def img_pre_processing(img):
+    img = misc.imresize(img.astype('float'),
+                        (FLAGS.img_h, FLAGS.img_w))
+    img = color.convert_colorspace(img, 'RGB', 'YUV')
+    return img
 
 def img_paths_to_img_array(image_paths):
-    all_imgs = [misc.imresize(misc.imread(imp), (50,100)) for imp in image_paths]
-    # all_imgs = [misc.imread(imp) for imp in image_paths]
+    all_imgs = [misc.imread(imp) for imp in image_paths]
     return np.array(all_imgs, dtype='float')
 
 def create_model():
 
-        model = Sequential()
+    input_shape = (FLAGS.img_h, FLAGS.img_w, FLAGS.img_c)
 
-        model.add(Convolution2D(32, 3, 3,
-                                border_mode='valid',
-                                input_shape=(50,100,3)))
-                                #input_shape=(160,320,3)))
+    model = Sequential()
+    model.add(BatchNormalization(input_shape=input_shape))
+    model.add(Convolution2D(24, 5, 5,
+                            subsample=(2,2),
+                            border_mode='same',
+                            input_shape=input_shape,
+                            name='conv1'))
+    model.add(Convolution2D(36, 4, 4,
+                            subsample=(2,2),
+                            border_mode='same',
+                            name='conv2'))
+    model.add(Convolution2D(48, 3, 3,
+                            subsample=(2,2),
+                            border_mode='same',
+                            name='conv3'))
+    model.add(Convolution2D(64, 2, 2,
+                            subsample=(1,1),
+                            border_mode='same',
+                            name='conv4'))
+    model.add(Convolution2D(64, 2, 2,
+                            subsample=(1,1),
+                            border_mode='same',
+                            name='conv5'))
 
-        model.add(Convolution2D(32, 3, 3))
+    model.add(Flatten())
+    model.add(Dense(1024, name='input'))
+    model.add(ELU())
+    model.add(Dropout(.5))
 
-        model.add(MaxPooling2D(pool_size=(2,2)))
-        model.add(Dropout(0.50))
+    model.add(Dense(512, name='hidden1'))
+    model.add(ELU())
+    model.add(Dropout(.4))
 
-        model.add(Flatten())
-        model.add(Dense(3072, name='input'))
-        model.add(Dropout(0.2))
+    model.add(Dense(128, name='hidden2'))
+    model.add(ELU())
+    model.add(Dropout(.3))
 
-        model.add(Dense(1536, name='hidden1'))
-        model.add(Dropout(0.2))
+    model.add(Dense(32, name='hidden3'))
+    model.add(ELU())
+    model.add(Dropout(.2))
 
-        model.add(Dense(1, init='normal', name='output'))
+    model.add(Dense(1, init='zero', name='output'))
 
-        model.compile(loss='mean_squared_error', optimizer='adam')
-        return model
+    opt = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.2)
+    model.compile(optimizer=opt, loss='mean_squared_error')
+    return model
+
+def save_model(model):
+    model_json = model.to_json()
+    with open("model.json", "w") as json_file:
+        json_file.write(model_json)
+    model.save_weights('model.h5')
+
+def select_specific_set(iter_set):
+    imgs, labs = [], []
+    for _, row in iter_set:
+        # extract the features and labels
+        img = img_pre_processing(misc.imread(row['center']))
+        lab = row['angle']
+
+        # flip 50% of the time
+        if np.random.choice([True, False]):
+            img, lab = np.fliplr(img), -lab + 0.
+
+        imgs.append(img)
+        labs.append(lab)
+
+    return np.array(imgs), np.array(labs)
+
+def generate_batch(log_data, training=True):
+    while training:
+        imgs1, labs1 = select_specific_set(
+            log_data[log_data['angle'] > 0].sample(
+                int(FLAGS.batch_size/5)).iterrows())
+        imgs2, labs2 = select_specific_set(
+            log_data[log_data['angle'] < 0].sample(
+                int(FLAGS.batch_size/5)).iterrows())
+        imgs3, labs3 = select_specific_set(log_data.sample(
+            FLAGS.batch_size - len(imgs1) - len(imgs2)).iterrows())
+        imgs = np.concatenate((imgs1, imgs2, imgs3), axis=0)
+        labs = np.concatenate((labs1, labs2, labs3), axis=0)
+        yield np.array(imgs), np.array(labs)
+
+    while not training:
+        imgs, labs = select_specific_set(log_data.sample(
+            FLAGS.val_size).iterrows())
+        yield np.array(imgs), np.array(labs)
 
 def main(_):
 
@@ -64,41 +145,23 @@ def main(_):
 
     # read the driving log
     with open('data/driving_log.csv', 'rb') as f:
-        log_data = pd.read_csv(f, header=None, names=['center', 'left',
-                                                      'right', 'angle',
-                                                      'throttle', 'break',
-                                                      'speed'])
-    # extract the features and labels
-    X_train = img_paths_to_img_array(log_data['center'])
-    y_train = np.array(log_data['angle'].tolist())
+        log_data = pd.read_csv(
+            f, header=None,
+            names=['center', 'left', 'right', 'angle',
+                   'throttle', 'break', 'speed'])
 
-    # normalize the images
-    X_train /= 255.0
-    X_train -= 0.5
-
-    # split into training and validation
-    X_train, X_val, y_train, y_val = train_test_split(
-        X_train, y_train, test_size=0.25, random_state=seed)
-
-    # evaluate model with standardized dataset
-    # regressor = KerasRegressor(build_fn=create_model,
-    #                            nb_epoch=FLAGS.epochs,
-    #                            batch_size=FLAGS.batch_size,
-    #                            verbose=1)
-
+    # create and train the model
     model = create_model()
-    model.fit(X_train, y_train,
-              batch_size=FLAGS.batch_size, nb_epoch=FLAGS.epochs,
-              verbose=1, validation_data=(X_val, y_val))
+    history = model.fit_generator(
+        generate_batch(log_data),
+        samples_per_epoch=FLAGS.samples_per_epoch,
+        validation_data=generate_batch(log_data, False),
+        nb_val_samples=FLAGS.val_size,
+        nb_epoch=FLAGS.epochs,
+        verbose=1)
 
-    # kfold = KFold(n_splits=2, random_state=seed)
-    # results = cross_val_score(regressor, X_train, y_train, cv=kfold)
-    # print("Results: %.2f (%.2f) MSE" % (results.mean(), results.std()))
-
-    model_json = model.to_json()
-    with open("model.json", "w") as json_file:
-        json_file.write(model_json)
-    model.save_weights('model.h5')
+    # save model to disk
+    save_model(model)
 
 # parses flags and calls the `main` function above
 if __name__ == '__main__':

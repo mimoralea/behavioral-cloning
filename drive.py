@@ -22,7 +22,7 @@ app = Flask(__name__)
 model = None
 
 def send_control(steering_angle, throttle):
-    print(steering_angle, throttle)
+    print('angle:', steering_angle, 'throttle:', throttle)
     sio.emit("steer", data={
     'steering_angle': steering_angle.__str__(),
     'throttle': throttle.__str__()
@@ -48,7 +48,7 @@ def telemetry(sid, data):
     steering_angle = model.predict(img_batch, batch_size=1)
     # The driving model currently just outputs a constant throttle. Feel free to edit this.
     angle = steering_angle[0][0]
-    send_control(angle, 1. if abs(angle) < 0.3 else 0.5)
+    send_control(angle, 1. if abs(angle) < 0.1 else 0.5 if abs(angle) < 0.3 else 0.3)
     # steering is from -25 to 25
     # control is from  -1 to 1
     #send_control(-0.99, 0.3)

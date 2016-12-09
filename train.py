@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 
 from keras.applications.inception_v3 import InceptionV3
+from keras.applications.vgg16 import VGG16
 from keras.preprocessing import image
 from keras.models import Model
 from keras.layers import Dense, GlobalAveragePooling2D
@@ -72,8 +73,8 @@ def select_specific_set(iter_set):
 
     return np.array(imgs), np.array(labs)
 
-def generate_batch(log_data, training=True):
-    while training:
+def generate_batch(log_data):
+    while True:
         """
         imgs1, labs1 = select_specific_set(
             log_data[log_data['angle'] > 0.1].sample(
@@ -88,11 +89,6 @@ def generate_batch(log_data, training=True):
         """
         imgs, labs = select_specific_set(log_data.sample(
             FLAGS.batch_size).iterrows())
-        yield np.array(imgs), np.array(labs)
-
-    while not training:
-        imgs, labs = select_specific_set(log_data.sample(
-            FLAGS.val_size).iterrows())
         yield np.array(imgs), np.array(labs)
 
 def main(_):
@@ -114,7 +110,12 @@ def main(_):
     # create and train the model
     input_shape = (FLAGS.img_h, FLAGS.img_w, FLAGS.img_c)
     input_tensor = Input(shape=input_shape)
+    """
     base_model = InceptionV3(input_tensor=input_tensor,
+                             weights='imagenet',
+                             include_top=False)
+    """
+    base_model = VGG16(input_tensor=input_tensor,
                              weights='imagenet',
                              include_top=False)
 
@@ -152,14 +153,21 @@ def main(_):
 
     # let's visualize layer names and layer indices to see how many layers
     # we should freeze:
-    # for i, layer in enumerate(base_model.layers):
-    #     print(i, layer.name)
+    for i, layer in enumerate(base_model.layers):
+        print(i, layer.name)
 
     # we chose to train the top 2 inception blocks, i.e. we will freeze
     # the first 172 layers and unfreeze the rest:
+    """
     for layer in model.layers[:172]:
        layer.trainable = False
     for layer in model.layers[172:]:
+       layer.trainable = True
+    """
+    # for VGG we choose to train the top 2 blocks as well
+    for layer in model.layers[:11]:
+       layer.trainable = False
+    for layer in model.layers[11:]:
        layer.trainable = True
 
     # we need to recompile the model for these modifications to take effect

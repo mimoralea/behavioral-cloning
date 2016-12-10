@@ -26,10 +26,12 @@ flags = tf.app.flags
 FLAGS = flags.FLAGS
 
 # command line flags
-flags.DEFINE_integer('features_epochs', 2,
+flags.DEFINE_integer('features_epochs', 5,
                      'The number of epochs when training features.')
-flags.DEFINE_integer('full_epochs', 10,
+flags.DEFINE_integer('full_epochs', 100,
                      'The number of epochs when end-to-end training.')
+flags.DEFINE_integer('tuning_epochs', 10,
+                     'The number of epochs when tuning FCNN.')
 flags.DEFINE_integer('batch_size', 128, 'The batch size.')
 flags.DEFINE_integer('samples_per_epoch', 12800,
                      'The number of samples per epoch.')
@@ -39,9 +41,12 @@ flags.DEFINE_integer('img_w', 200, 'The image width.')
 flags.DEFINE_integer('img_c', 3, 'The number of channels.')
 
 def img_pre_processing(img):
+    # resize and cast to float
     img = misc.imresize(
         img, (FLAGS.img_h, FLAGS.img_w)).astype('float')
+
     #img = color.convert_colorspace(img, 'RGB', 'YUV')
+    # normalize
     img /= 255.
     img -= 0.5
     img *= 2.
@@ -94,8 +99,7 @@ def generate_batch(log_data):
 def main(_):
 
     # fix random seed for reproducibility
-    seed = 123
-    np.random.seed(seed)
+    np.random.seed(123)
 
     # read the driving log
     with open('data/driving_log.csv', 'rb') as f:
@@ -104,17 +108,15 @@ def main(_):
             names=['center', 'left', 'right', 'angle',
                    'throttle', 'break', 'speed'])
 
+    # get a small set to use for validation
     X_val, y_val = select_specific_set(
         log_data.sample(FLAGS.val_size).iterrows())
     
     # create and train the model
     input_shape = (FLAGS.img_h, FLAGS.img_w, FLAGS.img_c)
     input_tensor = Input(shape=input_shape)
-    """
-    base_model = InceptionV3(input_tensor=input_tensor,
-                             weights='imagenet',
-                             include_top=False)
-    """
+
+    # get the VGG16 network
     base_model = VGG16(input_tensor=input_tensor,
                              weights='imagenet',
                              include_top=False)
@@ -122,7 +124,9 @@ def main(_):
     # add a global spatial average pooling layer
     x = base_model.output
     x = GlobalAveragePooling2D()(x)
-    # let's add a fully-connected layer
+
+    # add the fully-connected
+    # layer similar to the NVIDIA paper
     x = Dense(1024, activation='elu')(x)
     x = Dropout(0.4)(x)
     x = Dense(512, activation='elu')(x)
@@ -133,15 +137,15 @@ def main(_):
     x = Dropout(0.1)(x)
     predictions = Dense(1, init='zero')(x)
 
-    # this is the model we will train
+    # creatte the full model
     model = Model(input=base_model.input, output=predictions)
 
-    # first: train only the top layers (which were randomly initialized)
-    # i.e. freeze all convolutional InceptionV3 layers
+    # freeze all convolutional layers to initialize the top layers
     for layer in base_model.layers:
         layer.trainable = False
     
-    opt = Adam(lr=1e-03, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.5)
+    # train the model to prepare all weights
+    opt = Adam(lr=1e-04, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.5)
     model.compile(optimizer=opt, loss='mse')
 
     history = model.fit_generator(
@@ -151,27 +155,18 @@ def main(_):
         nb_epoch=FLAGS.features_epochs,
         verbose=1)
 
-    # let's visualize layer names and layer indices to see how many layers
-    # we should freeze:
+    # print all layers
     for i, layer in enumerate(base_model.layers):
         print(i, layer.name)
 
-    # we chose to train the top 2 inception blocks, i.e. we will freeze
-    # the first 172 layers and unfreeze the rest:
-    """
-    for layer in model.layers[:172]:
-       layer.trainable = False
-    for layer in model.layers[172:]:
-       layer.trainable = True
-    """
-    # for VGG we choose to train the top 2 blocks as well
+    # for VGG we choose to include the
+    # top 2 blocks in training
     for layer in model.layers[:11]:
        layer.trainable = False
     for layer in model.layers[11:]:
        layer.trainable = True
 
-    # we need to recompile the model for these modifications to take effect
-    # we use SGD with a low learning rate
+    # recompile and train with a finer learning rate
     opt = Adam(lr=1e-04, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0)
     model.compile(optimizer=opt, loss='mse')
 
@@ -180,6 +175,22 @@ def main(_):
         samples_per_epoch=FLAGS.samples_per_epoch,
         validation_data=(X_val, y_val),
         nb_epoch=FLAGS.full_epochs,
+        verbose=1)
+
+    # fine-tune top layer only
+    # freeze all convolutional layers
+    for layer in base_model.layers:
+        layer.trainable = False
+    
+    # recompile and train once more
+    opt = Adam(lr=1e-06, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0)
+    model.compile(optimizer=opt, loss='mse')
+
+    history = model.fit_generator(
+        generate_batch(log_data),
+        samples_per_epoch=FLAGS.samples_per_epoch,
+        validation_data=(X_val, y_val),
+        nb_epoch=FLAGS.tuning_epochs,
         verbose=1)
 
     # save model to disk

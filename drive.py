@@ -44,14 +44,13 @@ def telemetry(sid, data):
     img = img_pre_processing(image_array)
     img_batch = img[None, :, :, :].astype('float')
 
-    # This model currently assumes that the features of the model are just the images. Feel free to change this.
     steering_angle = model.predict(img_batch, batch_size=1)
-    # The driving model currently just outputs a constant throttle. Feel free to edit this.
+
     angle = steering_angle[0][0]
-    send_control(angle, 1. if abs(angle) < 0.1 else 0.5 if abs(angle) < 0.3 else 0.3)
-    # steering is from -25 to 25
-    # control is from  -1 to 1
-    #send_control(-0.99, 0.3)
+    send_control(
+        angle,
+        1. if abs(angle) < 0.2 else 0.3 if abs(angle) < 0.5 else -0.5)
+
 
 
 @sio.on('connect')

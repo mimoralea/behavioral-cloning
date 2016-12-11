@@ -27,7 +27,7 @@ flags = tf.app.flags
 FLAGS = flags.FLAGS
 
 # command line flags
-flags.DEFINE_integer('features_epochs', 2,
+flags.DEFINE_integer('features_epochs', 1,
                      'The number of epochs when training features.')
 flags.DEFINE_integer('full_epochs', 100,
                      'The number of epochs when end-to-end training.')
@@ -135,11 +135,11 @@ def main(_):
     x = Dense(1024, activation='elu')(x)
     x = Dropout(0.5)(x)
     x = Dense(512, activation='elu')(x)
-    x = Dropout(0.2)(x)
+    x = Dropout(0.5)(x)
     x = Dense(128, activation='elu')(x)
     x = Dropout(0.5)(x)
     x = Dense(32, activation='elu')(x)
-    x = Dropout(0.2)(x)
+    x = Dropout(0.5)(x)
     predictions = Dense(1, init='zero')(x)
 
     # creatte the full model
@@ -176,12 +176,12 @@ def main(_):
     opt = Adam(lr=1e-05, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0)
     model.compile(optimizer=opt, loss='mse')
     early_stopping = EarlyStopping(monitor='val_loss',
-                                   patience=3,
+                                   patience=1,
                                    min_delta=0.0001)
 
     print('train top 2 conv blocks and fully-connected layers')
     history = model.fit_generator(
-        generate_batch(train_log_data, angle_freq = 0, angle_train = 0),
+        generate_batch(train_log_data, angle_freq = 10, angle_train = 0.3),
         samples_per_epoch=FLAGS.samples_per_epoch,
         validation_data=(X_val, y_val),
         nb_epoch=FLAGS.full_epochs,
@@ -202,7 +202,7 @@ def main(_):
 
     print('fine-tune fully-connected layers only')
     history = model.fit_generator(
-        generate_batch(train_log_data, angle_freq = 6, angle_train = 0.1),
+        generate_batch(train_log_data, angle_freq = 0, angle_train = 0),
         samples_per_epoch=FLAGS.samples_per_epoch,
         validation_data=(X_val, y_val),
         nb_epoch=FLAGS.tuning_epochs,

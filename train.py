@@ -27,11 +27,11 @@ flags = tf.app.flags
 FLAGS = flags.FLAGS
 
 # command line flags
-flags.DEFINE_integer('features_epochs', 1,
+flags.DEFINE_integer('features_epochs', 2,
                      'The number of epochs when training features.')
-flags.DEFINE_integer('full_epochs', 100,
+flags.DEFINE_integer('full_epochs', 20,
                      'The number of epochs when end-to-end training.')
-flags.DEFINE_integer('tuning_epochs', 10,
+flags.DEFINE_integer('tuning_epochs', 20,
                      'The number of epochs when tuning FCNN.')
 flags.DEFINE_integer('batch_size', 128, 'The batch size.')
 flags.DEFINE_integer('samples_per_epoch', 12800,
@@ -150,10 +150,10 @@ def main(_):
         layer.trainable = False
     
     # train the top layer to prepare all weights
-    opt = Adam(lr=1e-04, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.5)
+    opt = Adam(lr=1e-03, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.5)
     model.compile(optimizer=opt, loss='mse')
 
-    print('train fully-connected layers weights')
+    print('Train fully-connected layers weights:')
     history = model.fit_generator(
         generate_batch(train_log_data, angle_freq = 0, angle_train = 0),
         samples_per_epoch=FLAGS.samples_per_epoch,
@@ -173,13 +173,13 @@ def main(_):
        layer.trainable = True
 
     # recompile and train with a finer learning rate
-    opt = Adam(lr=1e-05, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0)
+    opt = Adam(lr=1e-03, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.7)
     model.compile(optimizer=opt, loss='mse')
     early_stopping = EarlyStopping(monitor='val_loss',
                                    patience=1,
                                    min_delta=0.0001)
 
-    print('train top 2 conv blocks and fully-connected layers')
+    print('Train top 2 conv blocks and fully-connected layers:')
     history = model.fit_generator(
         generate_batch(train_log_data, angle_freq = 10, angle_train = 0.3),
         samples_per_epoch=FLAGS.samples_per_epoch,
@@ -194,13 +194,13 @@ def main(_):
         layer.trainable = False
     
     # recompile and train once more
-    opt = Adam(lr=1e-08, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0)
+    opt = Adam(lr=1e-05, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0)
     model.compile(optimizer=opt, loss='mse')
     early_stopping = EarlyStopping(monitor='val_loss',
-                                   patience=1,
+                                   patience=0,
                                    min_delta=0.0001)
 
-    print('fine-tune fully-connected layers only')
+    print('Fine-tune fully-connected layers only:')
     history = model.fit_generator(
         generate_batch(train_log_data, angle_freq = 0, angle_train = 0),
         samples_per_epoch=FLAGS.samples_per_epoch,

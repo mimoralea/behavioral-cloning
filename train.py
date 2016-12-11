@@ -27,12 +27,10 @@ flags = tf.app.flags
 FLAGS = flags.FLAGS
 
 # command line flags
-flags.DEFINE_integer('features_epochs', 2,
+flags.DEFINE_integer('features_epochs', 1,
                      'The number of epochs when training features.')
-flags.DEFINE_integer('full_epochs', 20,
+flags.DEFINE_integer('full_epochs', 100,
                      'The number of epochs when end-to-end training.')
-flags.DEFINE_integer('tuning_epochs', 20,
-                     'The number of epochs when tuning FCNN.')
 flags.DEFINE_integer('batch_size', 128, 'The batch size.')
 flags.DEFINE_integer('samples_per_epoch', 12800,
                      'The number of samples per epoch.')
@@ -78,21 +76,12 @@ def select_specific_set(iter_set):
 
     return np.array(imgs), np.array(labs)
 
-def generate_batch(log_data, angle_freq = 3, angle_train = 0.2):
+def generate_batch(log_data):
     while True:
-        if angle_train == 0 or angle_freq == 0:
-            imgs, labs = select_specific_set(log_data.sample(
+        imgs, labs = select_specific_set(
+            log_data.sample(
                 FLAGS.batch_size).iterrows())
-        else:
-            imgs1, labs1 = select_specific_set(
-                log_data[abs(log_data['angle']) > angle_train].sample(
-                    int(FLAGS.batch_size/angle_freq)).iterrows())
-            imgs2, labs2 = select_specific_set(log_data.sample(
-                FLAGS.batch_size - len(imgs1)).iterrows())
-            imgs = np.concatenate((imgs1, imgs2), axis=0)
-            labs = np.concatenate((labs1, labs2), axis=0)
         yield np.array(imgs), np.array(labs)
-
 
 def main(_):
     # fix random seed for reproducibility
@@ -104,6 +93,7 @@ def main(_):
             f, header=None,
             names=['center', 'left', 'right', 'angle',
                    'throttle', 'break', 'speed'])
+    print("Got", len(train_log_data), "samples for training")
 
     # read the validation driving log
     with open('data/validation/driving_log.csv', 'rb') as f:
@@ -111,6 +101,7 @@ def main(_):
             f, header=None,
             names=['center', 'left', 'right', 'angle',
                    'throttle', 'break', 'speed'])
+    print("Got", len(validation_log_data), "samples for validation")
 
     # get a small set to use for validation
     X_val, y_val = select_specific_set(
@@ -150,19 +141,18 @@ def main(_):
         layer.trainable = False
     
     # train the top layer to prepare all weights
-    opt = Adam(lr=1e-03, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.5)
-    model.compile(optimizer=opt, loss='mse')
+    model.compile(optimizer='adam', loss='mse')
 
     print('Train fully-connected layers weights:')
     history = model.fit_generator(
-        generate_batch(train_log_data, angle_freq = 0, angle_train = 0),
+        generate_batch(train_log_data),
         samples_per_epoch=FLAGS.samples_per_epoch,
         nb_epoch=FLAGS.features_epochs,
-        validation_data=(X_val, y_val),
         verbose=1)
 
     # print all layers
-    for i, layer in enumerate(base_model.layers):
+    print("Network architecture:")
+    for i, layer in enumerate(model.layers):
         print(i, layer.name)
 
     # for VGG we choose to include the
@@ -177,35 +167,14 @@ def main(_):
     model.compile(optimizer=opt, loss='mse')
     early_stopping = EarlyStopping(monitor='val_loss',
                                    patience=1,
-                                   min_delta=0.0001)
+                                   min_delta=0.00009)
 
     print('Train top 2 conv blocks and fully-connected layers:')
     history = model.fit_generator(
-        generate_batch(train_log_data, angle_freq = 10, angle_train = 0.3),
+        generate_batch(train_log_data),
         samples_per_epoch=FLAGS.samples_per_epoch,
         validation_data=(X_val, y_val),
         nb_epoch=FLAGS.full_epochs,
-        callbacks=[early_stopping],
-        verbose=1)
-
-    # fine-tune top layer only
-    # freeze all convolutional layers
-    for layer in base_model.layers:
-        layer.trainable = False
-    
-    # recompile and train once more
-    opt = Adam(lr=1e-05, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0)
-    model.compile(optimizer=opt, loss='mse')
-    early_stopping = EarlyStopping(monitor='val_loss',
-                                   patience=0,
-                                   min_delta=0.0001)
-
-    print('Fine-tune fully-connected layers only:')
-    history = model.fit_generator(
-        generate_batch(train_log_data, angle_freq = 0, angle_train = 0),
-        samples_per_epoch=FLAGS.samples_per_epoch,
-        validation_data=(X_val, y_val),
-        nb_epoch=FLAGS.tuning_epochs,
         callbacks=[early_stopping],
         verbose=1)
 

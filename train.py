@@ -124,13 +124,13 @@ def main(_):
     # add the fully-connected
     # layer similar to the NVIDIA paper
     x = Dense(1024, activation='elu')(x)
-    x = Dropout(0.5)(x)
+    x = Dropout(0.4)(x)
     x = Dense(512, activation='elu')(x)
-    x = Dropout(0.5)(x)
+    x = Dropout(0.3)(x)
     x = Dense(128, activation='elu')(x)
-    x = Dropout(0.5)(x)
+    x = Dropout(0.2)(x)
     x = Dense(32, activation='elu')(x)
-    x = Dropout(0.5)(x)
+    x = Dropout(0.1)(x)
     predictions = Dense(1, init='zero')(x)
 
     # creatte the full model

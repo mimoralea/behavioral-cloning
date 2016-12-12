@@ -92,8 +92,8 @@ An image is worth a thousand words, an video is worth... enjoy.
 
 ### Track 1
 
-<iframe  title="YouTube video player" width="480" height="390" src="http://www.youtube.com/watch?v=DQWI1kvmwRg?autoplay=1" frameborder="0" allowfullscreen></iframe>
+[![Alt text](https://img.youtube.com/vi/DQWI1kvmwRg/0.jpg)](https://www.youtube.com/watch?v=DQWI1kvmwRg)
 
 ### Track 2
 
-<iframe  title="YouTube video player" width="480" height="390" src="http://www.youtube.com/watch?v=DQWI1kvmwRg?autoplay=1" frameborder="0" allowfullscreen></iframe>
+[![Alt text](https://img.youtube.com/vi/DQWI1kvmwRg/0.jpg)](https://www.youtube.com/watch?v=DQWI1kvmwRg)

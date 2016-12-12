@@ -1,5 +1,13 @@
 # Behavioral Cloning
 
+## Self-Driving Nanodegree
+
+### Project 3: Behavioral Cloning
+
+Miguel Morales
+[@mimoralea](https://twitter.com/mimoralea)
+[mimoralea@gmail.com](mailto:mimoralea@gmail.com)
+
 In this project, we used a car simulator to teach a Convolutional Neural Network to drive a car around a track. The Network is only passed images from a front facing camera and the normalized steering angle in which the vehicle is being turned.
 
 Our approach to solve this problem was to use transfer learning methods to use a pre-trained network for base features and fine-tune a Fully-Connected Neural Network place on top of it.
@@ -60,8 +68,32 @@ To deal with these issues, we design a training and driving strategy that consis
 
 Additionally, after using this driving strategy and training the base model, we developed a tweak script that would intercept the trained agent's predictions and merge them with a user input. This script is very useful for specific corrections on a working model and it basically improves on behavior that might not be all that comfortable for the passengers inside. For example, the script uses the same main code as in train.py, but it also listens to key presses from the user. If the left or right keys are pressed, a very small value would be added to the predicted value so as to 'fix' an already good prediction. These image and adjusted prediction values would be stored on a numpy array and use for later for training. When the user feels like got enough and useful corrections on the current driving behavior, a simple Ctrl-C will kill the server sending the messages to the simulator and engage in training. The data is passed through with a very small learning rate so as to not damage or overfit the data, and for only a few epochs.
 
+### Training, Validation & Testing
+
+As mentioned in the section above, we collected separate and independent Training and Validation data sets. This ensures the accuracy of the validation set loss, and helps with preventing overfitting.
+
+For testing we use the simulators, this is really the only accurate way of determining whether the agent is capable or not of driving around each of the tracks. Creating a test set ourselves would not be of great advantage in this case. Mostly because there is no easily recognizable ground truth and the only thing we need to prove is whether the agent can drive on the tracks or not.
+
+On the main track we left the agent driving for about 4 hours continuously and the agent was able to successfully drive around without any issues until user intervention.
+
 ### Hyper-parameter Tunning
 
+Since we used an Adam optimizer, most of the hyper parameter tuning is done internally on it. However, we did select a learning rate that is high enough so to train fast, and not so high so that the agent would actually learn. Additionally, we use a decay rate of about 0.7, this way the initial learning rate will decrease and the model will get more precise as the epochs increased.
+
+### Batch Generator
+
+We developed a batch generator that would allow us to yield unlimited combinations of images in batches as required. In this batch generation function we added a couple of special features. First, the image pre-processing function would be called on on the images to be added to the batch. This reduced the amount of computation and additionally improve training time because these data augmentation strategies would run on the CPU while the training process would run on the GPU. The pre-processing of the image included image resize to a 140x200 ratio and image normalization with values laying in between -1 and 1. We tried using image convertion to YUV space instead of RGB, but perhaps since we used transfer learning and the 'ImageNet' weights had been acquired with RGB images, it was better not to do so.
+
+After the image was resized and normalized, it was horizontally flipped with a 50% chance. If the image was flipped, then the corresponding labels was multiplied by -1 to look for the corresponding turning angle. Then the images would be appended to a batch of 128 and passed to the training procedure.
 
 ## Results
 
+An image is worth a thousand words, an video is worth... enjoy.
+
+### Track 1
+
+<iframe  title="YouTube video player" width="480" height="390" src="http://www.youtube.com/watch?v=TheVideoID?autoplay=1" frameborder="0" allowfullscreen></iframe>
+
+### Track 2
+
+<iframe  title="YouTube video player" width="480" height="390" src="http://www.youtube.com/watch?v=TheVideoID?autoplay=1" frameborder="0" allowfullscreen></iframe>

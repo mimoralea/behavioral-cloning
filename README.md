@@ -53,7 +53,7 @@ We decided to use the VGG16 base layers to begin training this network. In speci
 
 ![VGG16 Macro Architecture][vgg16]
 
-On the image above (credit to [Davi Frossard](https://www.cs.toronto.edu/~frossard/post/vgg16/)), we can visualize the original architecture of the VGG16 network. On our solution, we removed the blue and yellow layers and replace them with an approximation of the Fully-Connected layers of the NVIDIA architecture:
+In the image above (credit to [Davi Frossard](https://www.cs.toronto.edu/~frossard/post/vgg16/)), we can visualize the original architecture of the VGG16 network. On our solution, we removed the blue and yellow layers and replace them with an approximation of the Fully-Connected layers of the NVIDIA architecture:
 
 `1024 -> elu -> dropout -> 128 -> elu  -> dropout -> 64 -> elu  -> dropout -> 16 -> elu  -> dropout -> 1`
 
@@ -62,6 +62,10 @@ On the image above (credit to [Davi Frossard](https://www.cs.toronto.edu/~frossa
 Being such a large network and having only 2 tracks to be able to train on, we had to aggresively add regularization methods to our network. First, the VGG16 network come with max pooling layers which progressively reduces the size of the representation in order to reduce the amount of parameters and computation in the network, this way helps in the prevention of overfitting. The base layers of the VGG16 network contains 5 blocks of 2-3 convolutions each. Each of these blocks has a max pooling layer at the end of its last convolution.
 
 Additionally to the max pooling layers, we added a dropout layer after each of the dense layers on the top network. These dropout layers also work to reduce overfitting by randomly dropping a specified number of connections each forward pass, therefore forcing the network to learn important features in different neurons, and simultaneously preventing complex adaptations to the training data.
+
+![Dropout][dropout]
+
+In the image above (credit to [Leonardo Araujo](https://leonardoaraujosantos.gitbooks.io/artificial-inteligence/content/dropout_layer.html) we can see a depiction of dropout layers. We added dropout layers after each of the dense layers.
 
 Finally, we pre-recorded validation data on a seperate folder and use this as an independent validation set. We developed an early stopping function that would be queried after each epoch. The function will basically stop training if it found that the validation loss was improving for the past 2 epochs.
 
@@ -72,6 +76,10 @@ Finally, we pre-recorded validation data on a seperate folder and use this as an
 For our training, we first leverage the feature layers of the VGG16 network. The network we started with had it's weights previously trained on the 'ImageNet' data set.
 
 First, we set all of the pre-trained VGG16 features layer so that they are not trainable. In other words, it's weight will not change. Then, we connect the top layer and train a single epoch of a subset of the data. This allows for the weights of the top layers to be initialized to sensible values that work with the features currently on the VGG layers.
+
+![Conv Weights][vggweights]
+
+In the image above (credit to [François Chollet](https://blog.keras.io/how-convolutional-neural-networks-see-the-world.html)), we can see what our original network sees the world. The important thing to remember, for example, is that the 4th and 5th conv blocks got Fine-tuned with our new data set. So, all of the features learned in the first 3 convolutions will remain this way on our final model.
 
 Next, we proceed to make only the upper 2 blocks of the VGG16 network trainable. This is so that the base features learned with the 'ImageNet' training stay in place. These features are only the base and therefore will consist of simple shapes and line like circles, squares and so on. Enabling these upper 2 blocks for training is very important because we want the network to 'forget' about cats, planes and horses, and learn about roads, trees, mountain, lane-lines, etc. These new items will most likely be learned on the top 2 layers only and the whole network is therefore able to learn new things.
 
@@ -131,3 +139,5 @@ An image is worth a thousand words, an video is worth... enjoy.
 
 
 [vgg16]: ./imgs/vgg16.png "VGG16 Original Macro Architecture"
+[dropout]: ./imgs/dropout.jpeg "Dropout"
+[vggweights]: ./imgs/vgg16_filters_overview.jpg "VGG16 ImageNet Weights"

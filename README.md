@@ -12,9 +12,9 @@ In this project, you will find 3 scripts and 2 files representing the final mode
 
 Scripts:
 
-    * train.py: this file allows you to train a model base on the driving data collected from Udacity's Simulator.
-    * tweak.py: this file allows you to fine-tune the pre-trained model by connecting a pygame hook and listening to keyboard input. You will select the 'Autonomous' mode in the Udacity Simulator and will correct or tweak the agents driving while it is predicting it's steering angles around the track. This new data will be collected and the script will train over this data for 10 epochs set once a Ctrl-C signal is sent to it.
-    * drive.py: this file allows you to let the agent drive autonomously around the selected track.
+* train.py: this file allows you to train a model base on the driving data collected from Udacity's Simulator.
+* tweak.py: this file allows you to fine-tune the pre-trained model by connecting a pygame hook and listening to keyboard input. You will select the 'Autonomous' mode in the Udacity Simulator and will correct or tweak the agents driving while it is predicting it's steering angles around the track. This new data will be collected and the script will train over this data for 10 epochs set once a Ctrl-C signal is sent to it.
+* drive.py: this file allows you to let the agent drive autonomously around the selected track.
 
 ## Model Architecture
 
@@ -50,13 +50,13 @@ One of the main issues we had to collect the data is that the keyboard doesn't d
 
 To deal with these issues, we design a training and driving strategy that consisted of the following:
 
-    1. Drive around the tracks with very rapid and constant presses, this way avoiding peaks signals.
-    2. Drive in the reverse of the tracks the same way as (1).
-    3. Drive again around the first track but this time using selective recording. We disable data recording, go next to the right lane line, enable recording, drive into the middle of the lane, disable recoding.
-    4. Drive as in (3) for every terrain patch you can encounter. Dirt, grass, yellow lines, white lines.
-    5. Repeat (3) and (4) but this time for the left lane line.
-    6. Do the same but for the second track.
-    7. Do the same but for the reverse of both tracks.
+1. Drive around the tracks with very rapid and constant presses, this way avoiding peaks signals.
+2. Drive in the reverse of the tracks the same way as (1).
+3. Drive again around the first track but this time using selective recording. We disable data recording, go next to the right lane line, enable recording, drive into the middle of the lane, disable recoding.
+4. Drive as in (3) for every terrain patch you can encounter. Dirt, grass, yellow lines, white lines.
+5. Repeat (3) and (4) but this time for the left lane line.
+6. Do the same but for the second track.
+7. Do the same but for the reverse of both tracks.
 
 Additionally, after using this driving strategy and training the base model, we developed a tweak script that would intercept the trained agent's predictions and merge them with a user input. This script is very useful for specific corrections on a working model and it basically improves on behavior that might not be all that comfortable for the passengers inside. For example, the script uses the same main code as in train.py, but it also listens to key presses from the user. If the left or right keys are pressed, a very small value would be added to the predicted value so as to 'fix' an already good prediction. These image and adjusted prediction values would be stored on a numpy array and use for later for training. When the user feels like got enough and useful corrections on the current driving behavior, a simple Ctrl-C will kill the server sending the messages to the simulator and engage in training. The data is passed through with a very small learning rate so as to not damage or overfit the data, and for only a few epochs.
 

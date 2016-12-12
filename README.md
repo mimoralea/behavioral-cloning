@@ -49,9 +49,13 @@ Model files:
 
 ### Architecture
 
-We decided to use the VGG16 base layers to begin training this network. In specific, the VGG16 network contains 16 trainable layers. However, in our case, we only kept the bottom 13 convolutional layers and the corresponding max pooling layers. Additionally, we attached a Fully-Connected Neural Network; this network contained 5 total layers in an attempt to built a Fully-Connected architecture similar to what we read in this [NVIDIA paper](http://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf). That is we connected a layer with 1024 neurons to another layer with 128 neurons, to a 64, then a 16, with a readout layer of 1 neuron.
+We decided to use the VGG16 base layers to begin training this network. In specific, the VGG16 network originally contains 16 trainable layers. However, in our case, we only kept the bottom 13 convolutional layers and the corresponding max pooling layers. Additionally, we attached a Fully-Connected Neural Network; this network contained 5 total layers in an attempt to built a Fully-Connected architecture similar to what we read in this [NVIDIA paper](http://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf). That is we connected a layer with 1024 neurons to another layer with 128 neurons, to a 64, then a 16, with a readout layer of 1 neuron.
 
 ![VGG16 Macro Architecture][vgg16]
+
+On the image above (credit to [Davi Frossard](https://www.cs.toronto.edu/~frossard/post/vgg16/)), we can visualize the original architecture of the VGG16 network. On our solution, we removed the blue and yellow layers and replace them with an approximation of the Fully-Connected layers of the NVIDIA architecture:
+
+`1024 -> elu -> dropout -> 128 -> elu  -> dropout -> 64 -> elu  -> dropout -> 16 -> elu  -> dropout -> 1`
 
 ### Regularization
 
@@ -120,6 +124,10 @@ An image is worth a thousand words, an video is worth... enjoy.
 ### Track 2
 
 [![Alt text](https://img.youtube.com/vi/DQWI1kvmwRg/0.jpg)](https://www.youtube.com/watch?v=DQWI1kvmwRg)
+
+## References
+
+[VGG Macro architecture image from this page](https://www.cs.toronto.edu/~frossard/post/vgg16/)
 
 
 [vgg16]: ./imgs/vgg16.png "VGG16 Original Macro Architecture"

@@ -1,12 +1,8 @@
-# Behavioral Cloning
+# Self-Driving Nanodegree
 
-## Self-Driving Nanodegree
+## Project 3: Behavioral Cloning
 
-### Project 3: Behavioral Cloning
-
-Miguel Morales
-[@mimoralea](https://twitter.com/mimoralea)
-[mimoralea@gmail.com](mailto:mimoralea@gmail.com)
+Miguel Morales | [@mimoralea](https://twitter.com/mimoralea) | [mimoralea@gmail.com](mailto:mimoralea@gmail.com)
 
 In this project, we used a car simulator to teach a Convolutional Neural Network to drive a car around a track. The Network is only passed images from a front facing camera and the normalized steering angle in which the vehicle is being turned.
 
@@ -16,7 +12,27 @@ Our results are very successful, we were able to constantly drive around the fir
 
 ## Code usage
 
-In this project, you will find 3 scripts and 2 files representing the final model.
+```
+(keras) [mimoralea@hash behavioral-cloning]$ tree . -L 2
+.
+├── README.md
+├── __pycache__
+│   └── train.cpython-35.pyc
+├── data
+│   ├── train
+│   └── validation
+├── drive.py
+├── model.h5
+├── model.json
+├── simulator
+│   ├── Default Linux desktop Universal.x86
+│   ├── Default Linux desktop Universal.x86_64
+│   ├── Default Linux desktop Universal_Data
+│   └── simulator-linux.zip
+├── train.py
+└── tweak.py
+```
+In this project, you will find 5 important files. 3 scripts to train, fine-tune and test the models, and 2 files representing the model architecture and weights.
 
 Scripts:
 
@@ -24,11 +40,18 @@ Scripts:
 * tweak.py: this file allows you to fine-tune the pre-trained model by connecting a pygame hook and listening to keyboard input. You will select the 'Autonomous' mode in the Udacity Simulator and will correct or tweak the agents driving while it is predicting it's steering angles around the track. This new data will be collected and the script will train over this data for 10 epochs set once a Ctrl-C signal is sent to it.
 * drive.py: this file allows you to let the agent drive autonomously around the selected track.
 
+Model files:
+
+* model.json: represents the model architecture of the Convolutional Neural Network.
+* model.h5: represents the trained weights of the model.
+
 ## Model Architecture
 
 ### Architecture
 
 We decided to use the VGG16 base layers to begin training this network. In specific, the VGG16 network contains 16 trainable layers. However, in our case, we only kept the bottom 13 convolutional layers and the corresponding max pooling layers. Additionally, we attached a Fully-Connected Neural Network; this network contained 5 total layers in an attempt to built a Fully-Connected architecture similar to what we read in this [NVIDIA paper](http://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf). That is we connected a layer with 1024 neurons to another layer with 128 neurons, to a 64, then a 16, with a readout layer of 1 neuron.
+
+![VGG16 Macro Architecture][vgg16]
 
 ### Regularization
 
@@ -97,3 +120,6 @@ An image is worth a thousand words, an video is worth... enjoy.
 ### Track 2
 
 [![Alt text](https://img.youtube.com/vi/DQWI1kvmwRg/0.jpg)](https://www.youtube.com/watch?v=DQWI1kvmwRg)
+
+
+[vgg16]: ./imgs/vgg16.png "VGG16 Original Macro Architecture"

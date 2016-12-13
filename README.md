@@ -144,10 +144,6 @@ An image is worth a thousand words, an video is worth... enjoy.
 
 [![Alt text](https://img.youtube.com/vi/aDfaWdODU_0/0.jpg)](https://www.youtube.com/watch?v=aDfaWdODU_0)
 
-## References
-
-[VGG Macro architecture image from this page](https://www.cs.toronto.edu/~frossard/post/vgg16/)
-
 
 [intro]: ./imgs/becloning.gif "Behavioral Cloning"
 [intro2]: ./imgs/becloning2.gif "Behavioral Cloning"

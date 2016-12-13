@@ -10,6 +10,8 @@ Our approach to solve this problem was to use transfer learning methods to use a
 
 Our results are very successful, we were able to constantly drive around the first track for over 4 hours (until stopped) with no issues at all. We are also able to drive through the path of the second track multiple times.
 
+![Behavioral Cloning][intro]
+
 ## Code usage
 
 ```
@@ -146,6 +148,7 @@ An image is worth a thousand words, an video is worth... enjoy.
 [VGG Macro architecture image from this page](https://www.cs.toronto.edu/~frossard/post/vgg16/)
 
 
+[intro]: ./imgs/becloning.gif "Behavioral Cloning"
 [vgg16]: ./imgs/vgg16.png "VGG16 Original Macro Architecture"
 [dropout]: ./imgs/dropout.jpeg "Dropout"
 [vggweights]: ./imgs/vgg16_filters_overview.jpg "VGG16 ImageNet Weights"

@@ -2,7 +2,6 @@ import tensorflow as tf
 import pandas as pd
 import numpy as np
 
-from keras.applications.inception_v3 import InceptionV3
 from keras.applications.vgg16 import VGG16
 from keras.preprocessing import image
 from keras.models import Model
@@ -12,10 +11,6 @@ from keras.optimizers import Adam
 from keras.models import Sequential, Model
 from keras.layers import Dropout, Activation, Lambda
 from keras.layers import Input, Flatten, Dense, ELU
-from keras.layers import Convolution2D, MaxPooling2D
-from keras.layers.core import SpatialDropout2D
-from keras.wrappers.scikit_learn import KerasRegressor
-from keras.layers.normalization import BatchNormalization
 from keras.callbacks import EarlyStopping
 
 import matplotlib.pyplot as plt

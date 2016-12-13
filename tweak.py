@@ -58,10 +58,10 @@ def telemetry(sid, data):
     # calculate angle corrections
     key = pygame.key.get_pressed()
     if key[pygame.K_LEFT]:
-        val -= 0.001
+        val -= 0.01
         val = np.max((val, -1))
     elif key[pygame.K_RIGHT]:
-        val += 0.001
+        val += 0.01
         val = np.min((val, 1))
     else:
         val = 0

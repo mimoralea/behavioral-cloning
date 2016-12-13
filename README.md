@@ -138,11 +138,11 @@ An image is worth a thousand words, an video is worth... enjoy.
 
 ### Track 1
 
-[![Alt text](https://img.youtube.com/vi/DQWI1kvmwRg/0.jpg)](https://www.youtube.com/watch?v=DQWI1kvmwRg)
+[![Alt text](https://img.youtube.com/vi/H3Ifr-j4vBU/0.jpg)](https://www.youtube.com/watch?v=H3Ifr-j4vBU)
 
 ### Track 2
 
-[![Alt text](https://img.youtube.com/vi/DQWI1kvmwRg/0.jpg)](https://www.youtube.com/watch?v=DQWI1kvmwRg)
+[![Alt text](https://img.youtube.com/vi/aDfaWdODU_0/0.jpg)](https://www.youtube.com/watch?v=aDfaWdODU_0)
 
 ## References
 

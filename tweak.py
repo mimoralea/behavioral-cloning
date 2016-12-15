@@ -32,7 +32,7 @@ app = socketio.Middleware(sio)
 
 pygame.init()
 pygame.display.set_caption('')
-screen = pygame.display.set_mode((200,140), pygame.DOUBLEBUF)
+screen = pygame.display.set_mode((200,60), pygame.DOUBLEBUF)
 
 
 def send_control(steering_angle, throttle, nsamples=0):
@@ -58,10 +58,10 @@ def telemetry(sid, data):
     # calculate angle corrections
     key = pygame.key.get_pressed()
     if key[pygame.K_LEFT]:
-        val -= 0.01
+        val -= 0.005
         val = np.max((val, -1))
     elif key[pygame.K_RIGHT]:
-        val += 0.01
+        val += 0.005
         val = np.min((val, 1))
     else:
         val = 0
@@ -105,7 +105,7 @@ def signal_handler(signal, frame):
 
         model.fit(X_corr, y_corr,
                   batch_size=128,
-                  nb_epoch=10,
+                  nb_epoch=3,
                   verbose=1)
 
         timestamp = str(int(time.time()))
@@ -147,5 +147,3 @@ if __name__ == '__main__':
     signal.signal(signal.SIGINT, signal_handler)
     print('Press Ctrl+C when ready to train')
     eventlet.wsgi.server(eventlet.listen(('', 4567)), app)
-
-

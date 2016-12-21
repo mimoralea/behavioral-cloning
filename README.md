@@ -106,9 +106,12 @@ Finally, we train on the whole data for several epochs until the loss in the val
 
 ![Block 5 Conv 2][block5conv2]
 
-![Block 5 Conv 3][block5conv3]
-
-In the images above, we can see what some of the neurons on the last 3 convolutional layers look like. As we can see from the image, the convolutions progresses the images become more and more elaborated. This is good and an indication that our Neural Network is able to learn from the most basic to the most complex representations and with this able to correctly predict when to turn and in what degree.
+In the images above, we can see what some of the neurons on the 
+last convolutional layers look like. As we can see from the image, 
+the convolutions progresses the images become more and more elaborated. 
+This is good and an indication that our Neural Network is able to 
+learn from the most basic to the most complex representations and 
+with this able to correctly predict when to turn and in what degree.
 
 ### Data Collection
 
@@ -217,5 +220,4 @@ An image is worth a thousand words, an video is worth... enjoy.
 [vggweights]: ./imgs/vgg16_filters_overview.jpg "VGG16 ImageNet Weights"
 [block5conv1]: ./imgs/block5_conv1_filters_5x5.png "Final Model Weights Block 5 conv 1"
 [block5conv2]: ./imgs/block5_conv2_filters_5x5.png "Final Model Weights Block 5 conv 2"
-[block5conv3]: ./imgs/block5_conv3_filters_8x8.png "Final Model Weights Block 5 conv 3"
 [crophor]: ./imgs/cropped.png "Cropped Horizon"

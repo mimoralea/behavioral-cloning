@@ -63,7 +63,7 @@ for layer_name in ['block5_conv1', 'block5_conv2', 'block5_conv3']:
     kept_filters = []
     for filter_index in range(0, 512):
 
-        if len(kept_filters) >= 25:
+        if len(kept_filters) >= 9:
             break
 
         # we only scan through the first 200 filters,
@@ -112,7 +112,7 @@ for layer_name in ['block5_conv1', 'block5_conv2', 'block5_conv3']:
     print('kept', len(kept_filters))
 
     # we will stich the best 25 filters on a 5 x 5 grid.
-    n = 5
+    n = 9
 
     # the filters that have the highest loss are assumed to be better-looking.
     # we will only keep the top 25 filters.

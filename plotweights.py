@@ -11,9 +11,9 @@ from keras import backend as K
 from keras.models import model_from_json
 
 # dimensions of the generated pictures for each filter.
-# img_width = 200
-# img_height = 140
-img_width = 140
+#img_width = 140
+#img_height = 200
+img_width = 60
 img_height = 200
 
 # util function to convert a tensor into a valid image
@@ -60,9 +60,9 @@ def normalize(x):
 
 # the name of the layer we want to visualize
 # (see model definition at keras/applications/vgg16.py)
-#layer_name = 'block5_conv1'
+layer_name = 'block5_conv1'
 layer_name = 'block5_conv2'
-#layer_name = 'block5_conv3'
+layer_name = 'block5_conv3'
 
 kept_filters = []
 for filter_index in range(0, 200):

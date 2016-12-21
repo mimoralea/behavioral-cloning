@@ -33,13 +33,17 @@ flags.DEFINE_integer('img_h', 60, 'The image height.')
 flags.DEFINE_integer('img_w', 200, 'The image width.')
 flags.DEFINE_integer('img_c', 3, 'The number of channels.')
 
-def img_pre_processing(img):
-    # resize and cast to float
-    img = misc.imresize(
-        img, (100, FLAGS.img_w)).astype('float')
+def img_pre_processing(img, old = False):
 
-    img = img[40:]
-    # img = color.convert_colorspace(img, 'RGB', 'YUV')
+    if old:
+        # resize and cast to float
+        img = misc.imresize(
+            img, (140, FLAGS.img_w)).astype('float')
+    else:
+        # resize and cast to float
+        img = misc.imresize(
+            img, (100, FLAGS.img_w)).astype('float')
+        img = img[40:]
 
     # normalize
     img /= 255.

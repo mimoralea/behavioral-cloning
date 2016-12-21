@@ -59,21 +59,21 @@ def telemetry(sid, data):
     key = pygame.key.get_pressed()
     if key[pygame.K_LEFT]:
         val -= 0.005
-        val = np.max((val, -1))
+        val = np.max((val, -0.6))
     elif key[pygame.K_RIGHT]:
         val += 0.005
-        val = np.min((val, 1))
+        val = np.min((val, 0.6))
     else:
         val = 0
 
     # calculate corrected angle and send control
-    angle = steering_angle[0][0] + val
+    angle = np.min((np.max((steering_angle[0][0] + val, -0.7)), 0.7))
 
     # save corrections
     if val != 0:
         X_corr.append(img.astype('float'))
         y_corr.append([angle])
-    
+
     # control car
     send_control(angle,
                  1. if abs(angle) < 0.2 else 0.3 if abs(angle) < 0.5 else -0.5,
@@ -81,7 +81,7 @@ def telemetry(sid, data):
 
     surface = pygame.surfarray.make_surface(np.flipud(np.rot90(img)))
     screen.blit(surface, (0, 0))
-    pygame.display.flip()    
+    pygame.display.flip()
 
     # refresh keyboard state
     pygame.event.pump()
@@ -105,7 +105,7 @@ def signal_handler(signal, frame):
 
         model.fit(X_corr, y_corr,
                   batch_size=128,
-                  nb_epoch=3,
+                  nb_epoch=10,
                   verbose=1)
 
         timestamp = str(int(time.time()))

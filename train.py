@@ -29,16 +29,18 @@ flags.DEFINE_integer('full_epochs', 100,
 flags.DEFINE_integer('batch_size', 128, 'The batch size.')
 flags.DEFINE_integer('samples_per_epoch', 12800,
                      'The number of samples per epoch.')
-flags.DEFINE_integer('img_h', 140, 'The image height.')
+flags.DEFINE_integer('img_h', 60, 'The image height.')
 flags.DEFINE_integer('img_w', 200, 'The image width.')
 flags.DEFINE_integer('img_c', 3, 'The number of channels.')
 
 def img_pre_processing(img):
     # resize and cast to float
     img = misc.imresize(
-        img, (FLAGS.img_h, FLAGS.img_w)).astype('float')
+        img, (100, FLAGS.img_w)).astype('float')
 
-    #img = color.convert_colorspace(img, 'RGB', 'YUV')
+    img = img[40:]
+    # img = color.convert_colorspace(img, 'RGB', 'YUV')
+
     # normalize
     img /= 255.
     img -= 0.5
@@ -84,24 +86,16 @@ def main(_):
 
     # read the training driving log
     with open('data/train/driving_log.csv', 'rb') as f:
-        train_log_data = pd.read_csv(
+        log_data = pd.read_csv(
             f, header=None,
             names=['center', 'left', 'right', 'angle',
                    'throttle', 'break', 'speed'])
-    print("Got", len(train_log_data), "samples for training")
+    print("Got", len(log_data), "samples for training")
 
     # read the validation driving log
-    with open('data/validation/driving_log.csv', 'rb') as f:
-        validation_log_data = pd.read_csv(
-            f, header=None,
-            names=['center', 'left', 'right', 'angle',
-                   'throttle', 'break', 'speed'])
-    print("Got", len(validation_log_data), "samples for validation")
-
-    # get a small set to use for validation
     X_val, y_val = select_specific_set(
-        validation_log_data.sample(
-            len(validation_log_data)).iterrows())
+        log_data.sample(int(len(log_data)*.10)).iterrows())
+    print("Got", len(X_val), "samples for validation")
 
     # create and train the model
     input_shape = (FLAGS.img_h, FLAGS.img_w, FLAGS.img_c)
@@ -118,14 +112,12 @@ def main(_):
 
     # add the fully-connected
     # layer similar to the NVIDIA paper
-    x = Dense(1024, activation='elu')(x)
+    x = Dense(512, activation='elu')(x)
     x = Dropout(0.5)(x)
-    x = Dense(128, activation='elu')(x)
+    x = Dense(256, activation='elu')(x)
     x = Dropout(0.3)(x)
     x = Dense(64, activation='elu')(x)
-    x = Dropout(0.5)(x)
-    x = Dense(16, activation='elu')(x)
-    x = Dropout(0.3)(x)
+    x = Dropout(0.1)(x)
     predictions = Dense(1, init='zero')(x)
 
     # creatte the full model
@@ -134,13 +126,13 @@ def main(_):
     # freeze all convolutional layers to initialize the top layers
     for layer in base_model.layers:
         layer.trainable = False
-    
+
     # train the top layer to prepare all weights
     model.compile(optimizer='adam', loss='mse')
 
     print('Train fully-connected layers weights:')
     history = model.fit_generator(
-        generate_batch(train_log_data),
+        generate_batch(log_data),
         samples_per_epoch=FLAGS.samples_per_epoch,
         nb_epoch=FLAGS.features_epochs,
         verbose=1)
@@ -166,7 +158,7 @@ def main(_):
 
     print('Train top 2 conv blocks and fully-connected layers:')
     history = model.fit_generator(
-        generate_batch(train_log_data),
+        generate_batch(log_data),
         samples_per_epoch=FLAGS.samples_per_epoch,
         validation_data=(X_val, y_val),
         nb_epoch=FLAGS.full_epochs,

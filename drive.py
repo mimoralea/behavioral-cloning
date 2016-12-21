@@ -71,6 +71,11 @@ if __name__ == '__main__':
     weights_file = args.model.replace('json', 'h5')
     model.load_weights(weights_file)
 
+    for layer in model.layers:
+        print(layer.name, layer.input, layer.output)
+        print(layer.input_shape, layer.output_shape)
+        print()
+
     # wrap Flask application with engineio's middleware
     app = socketio.Middleware(sio, app)
 

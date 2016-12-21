@@ -18,23 +18,37 @@ Our results are very successful, we were able to constantly drive around the fir
 ```
 (keras) [mimoralea@hash behavioral-cloning]$ tree . -L 2
 .
-├── README.md
-├── __pycache__
-│   └── train.cpython-35.pyc
-├── data
-│   ├── train
-│   └── validation
-├── drive.py
-├── model.h5
-├── model.json
-├── simulator
-│   ├── Default Linux desktop Universal.x86
-│   ├── Default Linux desktop Universal.x86_64
-│   ├── Default Linux desktop Universal_Data
-│   └── simulator-linux.zip
-├── train.py
-└── tweak.py
+|-- README.md
+|-- data
+|   |-- train
+|   `-- validation
+|-- drive.py
+|-- drive_old.py
+|-- imgs
+|   |-- becloning.gif
+|   |-- becloning2.gif
+|   |-- block5_conv1_filters_8x8.png
+|   |-- block5_conv2_filters_8x8.png
+|   |-- block5_conv3_filters_8x8.png
+|   |-- cropped.png
+|   |-- dropout.jpeg
+|   |-- vgg16.png
+|   `-- vgg16_filters_overview.jpg
+|-- model.h5
+|-- model.json
+|-- model_old.h5
+|-- model_old.json
+|-- packages.txt
+|-- plotweights.py
+|-- simulator
+|   |-- Default\ Linux\ desktop\ Universal.x86
+|   |-- Default\ Linux\ desktop\ Universal.x86_64
+|   |-- Default\ Linux\ desktop\ Universal_Data
+|   `-- simulator-linux.zip
+|-- train.py
+`-- tweak.py
 ```
+
 In this project, you will find 5 important files. 3 scripts to train, fine-tune and test the models, and 2 files representing the model architecture and weights.
 
 Scripts:
@@ -58,7 +72,7 @@ We decided to use the VGG16 base layers to begin training this network. In speci
 
 In the image above (credit to [Davi Frossard](https://www.cs.toronto.edu/~frossard/post/vgg16/)), we can visualize the original architecture of the VGG16 network. On our solution, we removed the blue and yellow layers and replace them with an approximation of the Fully-Connected layers of the NVIDIA architecture:
 
-`1024 -> elu -> dropout -> 128 -> elu  -> dropout -> 64 -> elu  -> dropout -> 16 -> elu  -> dropout -> 1`
+`512 -> elu -> dropout -> 256 -> elu  -> dropout -> 64 -> elu  -> dropout -> 1`
 
 ### Regularization
 
@@ -128,9 +142,27 @@ Since we used an Adam optimizer, most of the hyper parameter tuning is done inte
 
 ### Batch Generator
 
-We developed a batch generator that would allow us to yield unlimited combinations of images in batches as required. In this batch generation function we added a couple of special features. First, the image pre-processing function would be called on on the images to be added to the batch. This reduced the amount of computation and additionally improve training time because these data augmentation strategies would run on the CPU while the training process would run on the GPU. The pre-processing of the image included image resize to a 140x200 ratio and image normalization with values laying in between -1 and 1. We tried using image convertion to YUV space instead of RGB, but perhaps since we used transfer learning and the 'ImageNet' weights had been acquired with RGB images, it was better not to do so.
+We developed a batch generator that would allow us to yield unlimited combinations
+of images in batches as required. In this batch generation function we added a couple
+of special features. First, the image pre-processing function would be called on
+on the images to be added to the batch. This reduced the amount of computation
+and additionally improve training time because these data augmentation
+strategies would run on the CPU while the training process would run on the GPU.
+The pre-processing of the image included image resize to a 100x200 ratio and then
+cropping the image to 40 rows below the horizon as shown in the image below:
 
-After the image was resized and normalized, it was horizontally flipped with a 50% chance. If the image was flipped, then the corresponding labels was multiplied by -1 to look for the corresponding turning angle. Then the images would be appended to a batch of 128 and passed to the training procedure.
+![Cropping Horizon][crophor]
+
+Then, we do image normalization with values laying in between -1 and 1.
+We tried using image convertion to YUV space instead of RGB,
+but perhaps since we used transfer learning and the 'ImageNet'
+weights had been acquired with RGB images, it
+was better not to do so.
+
+After the image was resized and normalized, it was horizontally flipped
+with a 50% chance. If the image was flipped, then the corresponding labels
+was multiplied by -1 to look for the corresponding turning angle. Then the images
+would be appended to a batch of 128 and passed to the training procedure.
 
 ## Results
 
@@ -153,3 +185,4 @@ An image is worth a thousand words, an video is worth... enjoy.
 [block5conv1]: ./imgs/block5_conv1_filters_8x8.png "Final Model Weights Block 5 conv 1"
 [block5conv2]: ./imgs/block5_conv2_filters_8x8.png "Final Model Weights Block 5 conv 2"
 [block5conv3]: ./imgs/block5_conv3_filters_8x8.png "Final Model Weights Block 5 conv 3"
+[crophor]: ./imgs/cropped.png "Cropped Horizon"

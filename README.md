@@ -204,11 +204,11 @@ would be appended to a batch of 128 and passed to the training procedure.
 
 An image is worth a thousand words, an video is worth... enjoy.
 
-### Track 1
+### Track 1 video
 
 [![Alt text](https://img.youtube.com/vi/H3Ifr-j4vBU/0.jpg)](https://www.youtube.com/watch?v=H3Ifr-j4vBU)
 
-### Track 2
+### Track 2 video
 
 [![Alt text](https://img.youtube.com/vi/aDfaWdODU_0/0.jpg)](https://www.youtube.com/watch?v=aDfaWdODU_0)
 

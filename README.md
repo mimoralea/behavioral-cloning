@@ -126,19 +126,52 @@ To deal with these issues, we design a training and driving strategy that consis
 6. Do the same but for the second track.
 7. Do the same but for the reverse of both tracks.
 
-Additionally, after using this driving strategy and training the base model, we developed a tweak script that would intercept the trained agent's predictions and merge them with a user input. This script is very useful for specific corrections on a working model and it basically improves on behavior that might not be all that comfortable for the passengers inside. For example, the script uses the same main code as in train.py, but it also listens to key presses from the user. If the left or right keys are pressed, a very small value would be added to the predicted value so as to 'fix' an already good prediction. These image and adjusted prediction values would be stored on a numpy array and use for later for training. When the user feels like got enough and useful corrections on the current driving behavior, a simple Ctrl-C will kill the server sending the messages to the simulator and engage in training. The data is passed through with a very small learning rate so as to not damage or overfit the data, and for only a few epochs.
+![Behavioral Cloning][intro]
+
+![Behavioral Cloning][intro2]
+
+The gifs above were created from the data collected performing the steps as above.
+
+In addition to the steps above, after using this driving strategy and training the base
+ model, we developed a tweak script that would intercept the trained agent's 
+predictions and merge them with a user input. This script is very useful for 
+specific corrections on a working model and it basically improves on behavior
+ that might not be all that comfortable for the passengers inside. For example, 
+the script uses the same main code as in train.py, but it also listens to key 
+presses from the user. If the left or right keys are pressed, a very small 
+value would be added to the predicted value so as to 'fix' an already good 
+prediction. These image and adjusted prediction values would be stored on a
+ numpy array and use for later for training. When the user feels like got 
+enough and useful corrections on the current driving behavior, a simple 
+Ctrl-C will kill the server sending the messages to the simulator and 
+engage in training. The data is passed through with a very small learning 
+rate so as to not damage or overfit the data, and for only a few epochs.
 
 ### Training, Validation & Testing
 
-As mentioned in the section above, we collected separate and independent Training and Validation data sets. This ensures the accuracy of the validation set loss, and helps with preventing overfitting.
+As mentioned in the section above, we collected separate and independent 
+Training and Validation data sets. This ensures the accuracy of the validation 
+set loss, and helps with preventing overfitting.
 
-For testing we use the simulators, this is really the only accurate way of determining whether the agent is capable or not of driving around each of the tracks. Creating a test set ourselves would not be of great advantage in this case. Mostly because there is no easily recognizable ground truth and the only thing we need to prove is whether the agent can drive on the tracks or not.
+For testing we use the simulators, this is really the only accurate way of 
+determining whether the agent is capable or not of driving around each of
+ the tracks. Creating a test set ourselves would not be of great advantage 
+in this case. Mostly because there is no easily recognizable ground truth 
+and the only thing we need to prove is whether the agent can drive on the 
+tracks or not.
 
-On the main track we left the agent driving for about 4 hours continuously and the agent was able to successfully drive around without any issues until user intervention.
+On the main track we left the agent driving for about 4 hours continuously
+ and the agent was able to successfully drive around without any issues 
+until user intervention.
 
 ### Hyper-parameter Tunning
 
-Since we used an Adam optimizer, most of the hyper parameter tuning is done internally on it. However, we did select a learning rate that is high enough so to train fast, and not so high so that the agent would actually learn. Additionally, we use a decay rate of about 0.7, this way the initial learning rate will decrease and the model will get more precise as the epochs increased.
+Since we used an Adam optimizer, most of the hyper parameter tuning is 
+done internally on it. However, we did select a learning rate that is high 
+enough so to train fast, and not so high so that the agent would actually
+ learn. Additionally, we use a decay rate of about 0.7, this way the 
+initial learning rate will decrease and the model will get more precise 
+as the epochs increased.
 
 ### Batch Generator
 
